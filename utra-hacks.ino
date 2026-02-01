@@ -1,11 +1,13 @@
 #include "NewPing.h"
 
+// black -> red -> green
+
 int leftMotorForwardPin = 7;
 int leftMotorBackwardPin = 6;
 int rightMotorForwardPin = 11;
 int rightMotorBackwardPin = 10;
-int leftMotorSpeedPin = 6;
-int rightMotorSpeedPin = 5;
+// int leftMotorSpeedPin = 6;
+// int rightMotorSpeedPin = 5;
 
 int ENA = 3; // enable right motor (A)
 int ENB = 5; // enable left motor (B)
@@ -30,6 +32,8 @@ int redValue;
 int greenValue;
 int blueValue;
 
+int storePathColour = 0; // current path is green
+
 // IR
 // int IR_PIN_LEFT = 7;
 // int IR_PIN_RIGHT = 8; // change
@@ -46,8 +50,8 @@ void setup() {
   pinMode(leftMotorBackwardPin, OUTPUT);
   pinMode(rightMotorForwardPin, OUTPUT);
   pinMode(rightMotorBackwardPin, OUTPUT);
-  pinMode(leftMotorSpeedPin, OUTPUT);
-  pinMode(rightMotorSpeedPin, OUTPUT);
+  // pinMode(leftMotorSpeedPin, OUTPUT);
+  // pinMode(rightMotorSpeedPin, OUTPUT);
 
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
@@ -77,9 +81,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  // driveForward(2000, 255, 255);
-  // driveForward(1000, 128, 128); // slows down motor after 2 seconds
-
   digitalWrite(triggerPin, LOW);
   delayMicroseconds(2);
   digitalWrite(triggerPin, HIGH);
@@ -90,22 +91,18 @@ void loop() {
   unsigned int distance = sonar.ping_cm();
   Serial.println(distance);
 
-  // int stateLeft = digitalRead(IR_PIN_LEFT);
-  // int stateRight = digitalRead(IR_PIN_RIGHT);
+  int stateLeft = digitalRead(IR_PIN_LEFT);
+  int stateRight = digitalRead(IR_PIN_RIGHT);
 
-  /*
-  if both high, then nothing
-  if stateleft = low and stateright = high, turn right
-  if stateright = low and stateleft = high, turn left
-  if both low, stop
-  */
+  //
 
-  // if (stateLeft == LOW && stateRight == HIGH) {
-  //   turnRight(1000, 255, 255);
-  // } else if (stateRight == LOW && stateLeft == HIGH) {
-  //   turnLeft(1000, 255, 255);
-  // }
+  if (stateLeft == LOW && stateRight == HIGH) {
+    turnRight(1000, 255, 255);
+  } else if (stateRight == LOW && stateLeft == HIGH) {
+    turnLeft(1000, 255, 255);
+  driveForward(1000, 255, 255);
 
+  //
   digitalWrite(s2, LOW);
   digitalWrite(s3, LOW);
   delay(5);
@@ -127,25 +124,122 @@ void loop() {
   Serial.print(" G: "); Serial.print(green);
   Serial.print(" B: "); Serial.println(blue);
 
+  // starting upload
+  if (!(red >= 50 && green >= 50 && blue >= 50)) { // if it's not black
+    // turn right slightly and then move forward
+    turnRight(3000); // like 90 to 100 degs
+    driveForward(2000);
+  } else if (blue < 50 && !(red < 50 && green < 50)) { // ensure not white
+    turnRight(3000); // hopefully 90 degrees
+    driveForward(2000);
+    // do something with arm
+    turnRight(6000);
+    driveForward(4000);
+    // do something with arm and box
+    turnRight(3000);
+    driveForward(2000);
+    turnLeft(3000);
+    driveForward(2000);
+    /*
+    // turn right 90 degrees
+    // move forward
+    // pick up using arm
+    // turn right 180 degrees
+    // move forward * 2
+    // drop block off
+    // turn right 90 degrees
+    // move forward
+    // turn left 90 degrees
+    // move forward so its green path
+    */
+  } else if (green < 50 && !(blue < 50 && green < 50)) {
+    driveForward(2000); // PID
+  } else { // condition for grey
+    stopDriving(10000);
+  }
+
+  // reupload 2 (ball)
+  // lowkey skipped this logic
+
+  // reupload 3 (back to green then red)
+  // green is 0, red is 1
+  if (green < 50 && !(blue < 50 && red < 50) && storePathColour == 0) {
+    driveForward(2000);
+  } else if (red < 50 && !(blue < 50 && green < 50) && storePathColour == 0) {
+    turnRight(3000);
+    driveForward(2000);
+    storePathColour = 1;
+  } else if (red < 50 && !(blue < 50 && green < 50) && storePathColour == 1) {
+    driveForware(2000); // PID
+  } else if (blue < 50 && !(red < 50 && green < 50) && storePathColour == 1) {
+    turnRight(3000);
+    driveForward(3000);
+    // pick up box
+    turnRight(6000);
+    driveForward(6000);
+    turnRight(3000);
+    driveForward(2000);
+  } else { // condition if gray
+    stopDriving(10000);
+  }
+
+  /*
+  store path colour --> make as variable
+  if green, move forward, store path colour as green 
+  if red and the original colour was green, then rotate 90 degrees right, then move forward, store path colour as red
+  if red and store path colour is red, then move forward
+  if blue, and path colour is red, then:
+    turn right 90 degrees, move forward, pick up box, turn 180 degrees, move forward, turn 90 degrees right, move forward
+  if grey, then stop
+  */
+
+  // reupload 4 (last route, red)
+  storePathColour = 1; // red is 1, black is 2
+  if (distance <= 10) {
+    turnLeft(2000);
+    driveForward(2000);
+    turnRight(2000);
+    driveForward(2000);
+    turnRight(2000);
+    driveForward(2000);
+    turnLeft(2000);
+    driveForward(2000);
+  } else if (blue < 50 && !(red < 50 && green < 50)) {
+    turnLeft(2000);
+    driveForward(2000);
+    // do something with arm
+    turnLeft(4000);
+    driveForward(2000);
+    turnLeft(2000);
+    driveForward(2000);
+  } else if (red < 50 && !(blue < 50 && green < 50)) {
+    driveForward(2000); // PID
+  } else if (red >= 50 && green >= 50 && blue >= 50 && storePathColour == 1) {
+    storePathColour == 2;
+    turnRight(3000);
+    driveForward(2000);
+  } else if (red >= 50 && green >= 50 && blue >= 50) {
+    driveForward(5000);
+    stopDriving(10000);
+  }
+  /*
+  store path colour --> make as variable
+  if ultrasonic sensor shows <= 10
+  turn left 90 degrees, move forward
+    turn right 90 degrees, move forward
+    turn right 90 degrees move forward
+    turn left 90 degrees, move forward
+  if blue, then turn left 90 deg, move forward, drop box off, turn 180 deg, move forward, turn 90 deg left move forward
+  if red, move forward
+  if black and original path colour was red, then store path colour as black, then turn right like 90-100 deg and move forward
+  if black, move forward for like 10 seconds
+  */
+
+  // if red, red is below 50
+  // if white, all below50
+  // if black 
+
   delay(500);
-  // red
-  // digitalWrite(s2, LOW);        //S2/S3  levels define which set of photodiodes we are using LOW/LOW is for RED LOW/HIGH  is for Blue and HIGH/HIGH is for green
-  // digitalWrite(s3, LOW);
-  // int data1 = GetData();
-
-  // // green
-  // digitalWrite(s2, LOW);
-  // digitalWrite(s3, HIGH);
-  // int data2 = GetData();
-
-  // // blue
-  // digitalWrite(s2, HIGH);
-  // digitalWrite(s3, HIGH);
-  // int data3 = GetData();
-
-  // Serial.println(data1, data2, data3);
-
-  // delay(2000);
 }
 
 int GetData() {
@@ -154,7 +248,7 @@ int GetData() {
   return data;
 }
 
-void driveForward(int delayTime, int leftSpeed, int rightSpeed) {
+void driveForward(int delayTime) {
 
   analogWrite(leftMotorSpeedPin, leftSpeed);
   analogWrite(rightMotorSpeedPin, rightSpeed);
@@ -166,7 +260,7 @@ void driveForward(int delayTime, int leftSpeed, int rightSpeed) {
   delay(delayTime);
 }
 
-void driveBackward(int delayTime, int leftSpeed, int rightSpeed) {
+void driveBackward(int delayTime) {
 
   analogWrite(leftMotorSpeedPin, leftSpeed);
   analogWrite(rightMotorSpeedPin, rightSpeed);
@@ -179,7 +273,7 @@ void driveBackward(int delayTime, int leftSpeed, int rightSpeed) {
 }
 
 // fix because idk?
-void turnLeft(int delayTime, int leftSpeed, int rightSpeed) {
+void turnLeft(int delayTime) {
 
   analogWrite(leftMotorSpeedPin, leftSpeed);
   analogWrite(rightMotorSpeedPin, rightSpeed);
@@ -192,7 +286,7 @@ void turnLeft(int delayTime, int leftSpeed, int rightSpeed) {
 }
 
 // fix because idk?
-void turnRight(int delayTime, int leftSpeed, int rightSpeed) {
+void turnRight(int delayTime) {
 
   analogWrite(leftMotorSpeedPin, leftSpeed);
   analogWrite(rightMotorSpeedPin, rightSpeed);
@@ -211,64 +305,3 @@ void stopDriving(int delayTime) {
   digitalWrite(rightMotorBackwardPin, LOW);
   delay(delayTime);
 }
-
-// // forward pin -> clockwise
-// // backward pin -> counterclockwise
-
-// // right
-// int rightMotorForwardPin = 6; // forward 
-// int rightMotorBackwardPin = 7; // backward
-
-// int leftMotorForwardPin = 10; // forward (right)
-// int leftMotorBackwardPin = 11; // backward
-// int leftMotorForwardPin = 7;
-// int leftMotorBackwardPin = 6;
-// int rightMotorForwardPin = 11;
-// int rightMotorBackwardPin = 10;
-
-// int ENA = 3; // enable motor 1 (right)
-// int ENB = 5; // enable motor 2 (left)
-
-// // for ultrasonic distance sensor
-// // const int triggerPin = 8; // change?
-// // const int echoPin = 7; // change?
-
-// // long duration;
-// // long cm;
-
-// void setup() {
-//   // put your setup code here, to run once:
-//   pinMode(rightMotorForwardPin, OUTPUT);
-//   pinMode(rightMotorBackwardPin, OUTPUT);
-//   pinMode(leftMotorForwardPin,  OUTPUT);
-//   pinMode(leftMotorBackwardPin, OUTPUT);
-
-//   pinMode(ENA, OUTPUT);
-//   pinMode(ENB, OUTPUT);
-
-//   digitalWrite(ENA, HIGH); // enable motor 1 (right)
-//   digitalWrite(ENB, HIGH); // enable motor 2 (left)
-
-//   // Serial.begin(9600);
-//   // pinMode(triggerPin, OUTPUT);
-//   // pinMode(echoPin, OUTPUT);
-
-// }
-
-// void loop() {
-//   // put your main code here, to run repeatedly:
-//   // TEST WHICH MOTOR THIS IS
-//   digitalWrite(rightMotorForwardPin,  HIGH); // forward
-//   digitalWrite(rightMotorBackwardPin, LOW); // backward
-
-//   digitalWrite(leftMotorForwardPin, LOW); // forward
-//   digitalWrite(leftMotorBackwardPin, HIGH); // backward
-//   delay(3000);
-
-//   // digitalWrite(motor1pin1,  LOW);
-//   // digitalWrite(motor1pin2, HIGH);
-
-//   // digitalWrite(motor2pin1, LOW);
-//   // digitalWrite(motor2pin2, HIGH);
-//   // delay(3000);
-// }
