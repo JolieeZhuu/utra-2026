@@ -159,7 +159,23 @@ void loop() {
   }
 
   // reupload 2 (ball)
-  // lowkey skipped this logic
+  storePathColour = 0; // just to see if we've hit the square or not  
+  if (!(red >= 50 && green >= 50 && blue >= 50)) { //drive forward until the black square is detected
+    driveForward(5000);
+  } else if (red >= 50 && green >= 50 && blue >= 50) {
+    storePathColour = 1;
+    driveForward(2000);
+  } else if (red < 50 && !(green < 50 && blue < 50) && storePathColour == 1) {
+    stopDriving(3000); // lowkey just a test, who knows how much the ball will roll
+    turnRight(4000); // 180 deg turn
+    driveForward(3000); // im HOPING this is the grey zone
+  }
+  //drive forward until black is detected
+  //stop driving
+  //drive forward, pushing the ball, until red is detected
+  //stop driving, let the ball roll forward to the blue zone
+  //turn 180 degrees
+
 
   // reupload 3 (back to green then red)
   // green is 0, red is 1
