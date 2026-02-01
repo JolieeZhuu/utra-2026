@@ -108,16 +108,19 @@ void loop() {
 
   digitalWrite(s2, LOW);
   digitalWrite(s3, LOW);
+  delay(5);
   int red = pulseIn(out, LOW);
 
   // Read GREEN
   digitalWrite(s2, HIGH);
   digitalWrite(s3, HIGH);
+  delay(5);
   int green = pulseIn(out, LOW);
 
   // Read BLUE
   digitalWrite(s2, LOW);
   digitalWrite(s3, HIGH);
+  delay(5);
   int blue = pulseIn(out, LOW);
 
   Serial.print("R: "); Serial.print(red);
