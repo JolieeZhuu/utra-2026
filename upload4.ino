@@ -7,8 +7,6 @@ int leftMotorForwardPin = 7;
 int leftMotorBackwardPin = 6;
 int rightMotorForwardPin = 11;
 int rightMotorBackwardPin = 10;
-// int leftMotorSpeedPin = 6;
-// int rightMotorSpeedPin = 5;
 
 int ENA = 3; // enable right motor (A)
 int ENB = 5; // enable left motor (B)
@@ -35,9 +33,26 @@ int blueValue;
 
 int storePathColour = 0; // current path is green
 
-// IR
-// int IR_PIN_LEFT = 7;
-// int IR_PIN_RIGHT = 8; // change
+// ===== PID VARIABLES =====
+float Kp = 1.2;    // start here
+float Ki = 0.0;
+float Kd = 0.4;
+
+float error = 0;
+float lastError = 0;
+float integral = 0;
+
+int baseSpeed = 140;
+int maxSpeed  = 255;
+
+int rightSpeed = 0;
+int leftSpeed = 0;
+
+// CHANGE THIS AFTER CALIBRATION
+int targetGreenG = 24;
+int targetRedG = 28;
+int targetGreenR = 35;
+int targetRedR = 90;
 
 NewPing sonar(triggerPin, echoPin, MAX_DISTANCE);
 
@@ -54,8 +69,6 @@ void setup() {
   pinMode(leftMotorBackwardPin, OUTPUT);
   pinMode(rightMotorForwardPin, OUTPUT);
   pinMode(rightMotorBackwardPin, OUTPUT);
-  // pinMode(leftMotorSpeedPin, OUTPUT);
-  // pinMode(rightMotorSpeedPin, OUTPUT);
 
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
@@ -66,7 +79,6 @@ void setup() {
   pinMode(triggerPin, OUTPUT);
   pinMode(echoPin, INPUT); 
 
-  // pinMode(IR_PIN, INPUT);
 
   pinMode(s0, OUTPUT);
   pinMode(s1, OUTPUT);
@@ -80,9 +92,95 @@ void setup() {
   myservo.attach(9); 
 
   Serial.begin(9600);
+}
 
-  
+void followLinePID() {
+  int greenValue = readGreen();
+  int redValue = readRed();
 
+  error = (targetGreenG - greenValue) + (targetRedG - redValue);
+  integral += error;
+  float derivative = error - lastError;
+
+  float correction = (Kp * error) + (Ki * integral) + (Kd * derivative);
+
+  leftSpeed  = baseSpeed + correction;
+  rightSpeed = baseSpeed - correction;
+
+  leftSpeed  = constrain(leftSpeed, 0, maxSpeed);
+  rightSpeed = constrain(rightSpeed, 0, maxSpeed);
+
+  analogWrite(ENA, leftSpeed);
+  analogWrite(ENB, rightSpeed);
+
+  // Forward motion
+  digitalWrite(leftMotorForwardPin, LOW);
+  digitalWrite(leftMotorBackwardPin, HIGH);
+  digitalWrite(rightMotorForwardPin, HIGH);
+  digitalWrite(rightMotorBackwardPin, LOW);
+
+  lastError = error;
+}
+
+void followLinePIDRed() {
+  int greenValue = readGreen();
+  int redValue = readRed();
+
+  error = (targetGreenR - greenValue) + (targetRedR - redValue);
+  integral += error;
+  float derivative = error - lastError;
+
+  float correction = (Kp * error) + (Ki * integral) + (Kd * derivative);
+
+  leftSpeed  = baseSpeed + correction;
+  rightSpeed = baseSpeed - correction;
+
+  leftSpeed  = constrain(leftSpeed, 0, maxSpeed);
+  rightSpeed = constrain(rightSpeed, 0, maxSpeed);
+
+  analogWrite(ENA, leftSpeed);
+  analogWrite(ENB, rightSpeed);
+
+  // Forward motion
+  digitalWrite(leftMotorForwardPin, LOW);
+  digitalWrite(leftMotorBackwardPin, HIGH);
+  digitalWrite(rightMotorForwardPin, HIGH);
+  digitalWrite(rightMotorBackwardPin, LOW);
+
+  lastError = error;
+}
+
+int readGreen() {
+  digitalWrite(s2, HIGH);
+  digitalWrite(s3, HIGH);
+  delay(5);
+  return pulseIn(outPin, LOW);
+}
+
+int readRed() {
+  digitalWrite(s2, LOW);
+  digitalWrite(s3, LOW);
+  delay(5);
+  return pulseIn(outPin, LOW);
+}
+
+void debugOutput() {
+  static unsigned long lastPrint = 0;
+  if (millis() - lastPrint > 200) {
+    int g = readGreen();
+    int r = readRed();
+    Serial.print("Green: ");
+    Serial.print(g);
+    Serial.print(" | Red: ");
+    Serial.print(r);
+    Serial.print(" | Left Speed: ");
+    Serial.print(leftSpeed);
+    Serial.print(" | Right Speed: ");
+    Serial.print(rightSpeed);
+    Serial.print(" Error: ");
+    Serial.println(error);
+    lastPrint = millis();
+  }
 }
 
 void loop() {
@@ -130,9 +228,9 @@ void loop() {
   Serial.print(" G: "); Serial.print(green);
   Serial.print(" B: "); Serial.println(blue);
 
-  // reupload 4 (last route, red)
+  // starting upload
   storePathColour = 1; // red is 1, black is 2
-  if (distance <= 10) {
+  if (distance <= 15) {
     turnLeft(2000);
     driveForward(2000);
     turnRight(2000);
@@ -142,40 +240,18 @@ void loop() {
     turnLeft(2000);
     driveForward(2000);
   } else if (blue < 50 && !(red < 50 && green < 50)) {
-    turnLeft(2000);
-    driveForward(2000);
-    moveArmDown(2000);
-    driveBackward(1000);
-    turnLeft(4000);
-    driveForward(2000);
-    turnLeft(2000);
     driveForward(2000);
   } else if (red < 50 && !(blue < 50 && green < 50)) {
-    driveForward(2000); // PID
+    followLinePIDRed();
+    debugOutput(); // PID
   } else if (red >= 50 && green >= 50 && blue >= 50 && storePathColour == 1) {
     storePathColour == 2; // store as black, although it doesn't really matter
     turnRight(3000);
     driveForward(2000);
   } else if (red >= 50 && green >= 50 && blue >= 50) {
-    driveForward(5000);
-    stopDriving(10000);
+    followLinePIDRed();
+    debugOutput(); // PID
   }
-  /*
-  store path colour --> make as variable
-  if ultrasonic sensor shows <= 10
-  turn left 90 degrees, move forward
-    turn right 90 degrees, move forward
-    turn right 90 degrees move forward
-    turn left 90 degrees, move forward
-  if blue, then turn left 90 deg, move forward, drop box off, turn 180 deg, move forward, turn 90 deg left move forward
-  if red, move forward
-  if black and original path colour was red, then store path colour as black, then turn right like 90-100 deg and move forward
-  if black, move forward for like 10 seconds
-  */
-
-  // if red, red is below 50
-  // if white, all below50
-  // if black 
 
   delay(500);
 }
