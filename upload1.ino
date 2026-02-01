@@ -222,10 +222,11 @@ void loop() {
   } else if (green < 50 && !(blue < 50 && green < 50)) {
     followLinePID();
     debugOutput();
+  } else if (green < 30 && blue < 30 && green < 30) {
+    driveBackward(5000);      
   } else { // condition for grey
     stopDriving(10000);
   }
-
   delay(500);
 }
 
