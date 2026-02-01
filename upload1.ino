@@ -189,8 +189,7 @@ void loop() {
 
   // starting upload
   if (red >= 50 && green >= 50 && blue >= 50) {
-    followLinePID();
-    debugOutput();
+    driveForward(2000);
   } else if (!(red >= 50 && green >= 50 && blue >= 50)) { // if it's not black
     // turn right slightly and then move forward
     turnRight(3000); // like 90 to 100 degs

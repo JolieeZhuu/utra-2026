@@ -235,8 +235,7 @@ void loop() {
     turnRight(3000);
     driveForward(2000);
   } else if (red >= 50 && green >= 50 && blue >= 50) {
-    followLinePIDRed();
-    debugOutput(); // PID
+    driveForward(2000);
   }
 
   delay(500);
