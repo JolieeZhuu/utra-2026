@@ -19,12 +19,16 @@ long duration;
 long cm;
 
 // colour sensor
-int s0 = 8;
-int s1 = 9;
-int s2 = 10;
-int s3 = 11;
-int out = 12;
+int s0 = A0;
+int s1 = A1;
+int s2 = A3;
+int s3 = A4;
+int out = A2;
 int data = 0;
+
+int redValue;
+int greenValue;
+int blueValue;
 
 // IR
 // int IR_PIN_LEFT = 7;
@@ -62,10 +66,12 @@ void setup() {
   pinMode(s3, OUTPUT);
   pinMode(out, INPUT);
 
+  digitalWrite(s0, HIGH);
+  digitalWrite(s1, LOW);
+
   Serial.begin(9600);
 
-  digtalWrite(s0, HIGH); // output frequencing scaling is 100%
-  digitalWrite(s1, HIGH);
+  
 
 }
 
@@ -100,28 +106,49 @@ void loop() {
   //   turnLeft(1000, 255, 255);
   // }
 
-  // red
-  digitalWrite(s2, LOW);        //S2/S3  levels define which set of photodiodes we are using LOW/LOW is for RED LOW/HIGH  is for Blue and HIGH/HIGH is for green
-  digitalWrite(s3, LOW);
-  GetData();
-
-  // green
   digitalWrite(s2, LOW);
-  digitalWrite(s3, HIGH);
-  GetData();
+  digitalWrite(s3, LOW);
+  int red = pulseIn(out, LOW);
 
-  // blue
+  // Read GREEN
   digitalWrite(s2, HIGH);
   digitalWrite(s3, HIGH);
-  GetData();
+  int green = pulseIn(out, LOW);
 
-  delay(2000);
+  // Read BLUE
+  digitalWrite(s2, LOW);
+  digitalWrite(s3, HIGH);
+  int blue = pulseIn(out, LOW);
+
+  Serial.print("R: "); Serial.print(red);
+  Serial.print(" G: "); Serial.print(green);
+  Serial.print(" B: "); Serial.println(blue);
+
+  delay(500);
+  // red
+  // digitalWrite(s2, LOW);        //S2/S3  levels define which set of photodiodes we are using LOW/LOW is for RED LOW/HIGH  is for Blue and HIGH/HIGH is for green
+  // digitalWrite(s3, LOW);
+  // int data1 = GetData();
+
+  // // green
+  // digitalWrite(s2, LOW);
+  // digitalWrite(s3, HIGH);
+  // int data2 = GetData();
+
+  // // blue
+  // digitalWrite(s2, HIGH);
+  // digitalWrite(s3, HIGH);
+  // int data3 = GetData();
+
+  // Serial.println(data1, data2, data3);
+
+  // delay(2000);
 }
 
-void GetData() {
+int GetData() {
   data = pulseIn(out, LOW);
-  Serial.println(data);
   delay(20);
+  return data;
 }
 
 void driveForward(int delayTime, int leftSpeed, int rightSpeed) {
