@@ -1,4 +1,5 @@
 #include "NewPing.h"
+#include "Servo.h"
 
 // black -> red -> green
 
@@ -40,6 +41,9 @@ int storePathColour = 0; // current path is green
 
 NewPing sonar(triggerPin, echoPin, MAX_DISTANCE);
 
+Servo myServo;
+int pos = 0;
+
 // left motor is backwards
 // forward pin spins CCW
 // backward pin spins CW
@@ -72,6 +76,8 @@ void setup() {
 
   digitalWrite(s0, HIGH);
   digitalWrite(s1, LOW);
+
+  myservo.attach(9); 
 
   Serial.begin(9600);
 
@@ -132,10 +138,11 @@ void loop() {
   } else if (blue < 50 && !(red < 50 && green < 50)) { // ensure not white
     turnRight(3000); // hopefully 90 degrees
     driveForward(2000);
-    // do something with arm
+    moveArmUp(2000);
     turnRight(6000);
     driveForward(4000);
-    // do something with arm and box
+    moveArmDown(2000);
+    driveBackward(1000);
     turnRight(3000);
     driveForward(2000);
     turnLeft(3000);
@@ -192,7 +199,7 @@ void loop() {
   } else if (blue < 50 && !(red < 50 && green < 50) && storePathColour == 1) {
     turnRight(3000);
     driveForward(3000);
-    // pick up box
+    moveArmUp(2000);
     turnRight(6000);
     driveForward(6000);
     turnRight(3000);
@@ -225,7 +232,8 @@ void loop() {
   } else if (blue < 50 && !(red < 50 && green < 50)) {
     turnLeft(2000);
     driveForward(2000);
-    // do something with arm
+    moveArmDown(2000);
+    driveBackward(1000);
     turnLeft(4000);
     driveForward(2000);
     turnLeft(2000);
@@ -322,4 +330,28 @@ void stopDriving(int delayTime) {
   digitalWrite(rightMotorForwardPin, LOW);
   digitalWrite(rightMotorBackwardPin, LOW);
   delay(delayTime);
+}
+
+void moveArmUp(int delayTime) {
+  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(delayTime);                       // waits 15ms for the servo to reach the position
+  }
+  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(delayTime);                       // waits 15ms for the servo to reach the position
+  }
+}
+
+void moveArmDown(int delayTime) {
+  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(delayTime);                       // waits 15ms for the servo to reach the position
+  }
+  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
+    myservo.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(delayTime);                       // waits 15ms for the servo to reach the position
+  }
 }
