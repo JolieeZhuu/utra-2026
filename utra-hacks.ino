@@ -140,6 +140,12 @@ void loop() {
     driveForward(2000);
     turnLeft(3000);
     driveForward(2000);
+  } else if (green < 50 && !(blue < 50 && green < 50)) {
+    driveForward(2000); // PID
+  } else { // condition for grey
+    stopDriving(10000);
+  }
+
     /*
     // turn right 90 degrees
     // move forward
@@ -152,23 +158,19 @@ void loop() {
     // turn left 90 degrees
     // move forward so its green path
     */
-  } else if (green < 50 && !(blue < 50 && green < 50)) {
-    driveForward(2000); // PID
-  } else { // condition for grey
-    stopDriving(10000);
-  }
 
   // reupload 2 (ball)
-  storePathColour = 0; // just to see if we've hit the square or not  
+  // current path colour is green (0), change to black square (1)
   if (!(red >= 50 && green >= 50 && blue >= 50)) { //drive forward until the black square is detected
     driveForward(5000);
   } else if (red >= 50 && green >= 50 && blue >= 50) {
-    storePathColour = 1;
+    storePathColour = 1; // change to black
     driveForward(2000);
   } else if (red < 50 && !(green < 50 && blue < 50) && storePathColour == 1) {
     stopDriving(3000); // lowkey just a test, who knows how much the ball will roll
     turnRight(4000); // 180 deg turn
     driveForward(3000); // im HOPING this is the grey zone
+    storePathColour = 0; // store back to green (0)
   }
   //drive forward until black is detected
   //stop driving
@@ -184,7 +186,7 @@ void loop() {
   } else if (red < 50 && !(blue < 50 && green < 50) && storePathColour == 0) {
     turnRight(3000);
     driveForward(2000);
-    storePathColour = 1;
+    storePathColour = 1; // change to red
   } else if (red < 50 && !(blue < 50 && green < 50) && storePathColour == 1) {
     driveForware(2000); // PID
   } else if (blue < 50 && !(red < 50 && green < 50) && storePathColour == 1) {
@@ -231,7 +233,7 @@ void loop() {
   } else if (red < 50 && !(blue < 50 && green < 50)) {
     driveForward(2000); // PID
   } else if (red >= 50 && green >= 50 && blue >= 50 && storePathColour == 1) {
-    storePathColour == 2;
+    storePathColour == 2; // store as black, although it doesn't really matter
     turnRight(3000);
     driveForward(2000);
   } else if (red >= 50 && green >= 50 && blue >= 50) {
