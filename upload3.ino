@@ -89,8 +89,6 @@ void setup() {
   digitalWrite(s0, HIGH);
   digitalWrite(s1, LOW);
 
-  myservo.attach(9); 
-
   Serial.begin(9600);
 }
 
@@ -154,14 +152,14 @@ int readGreen() {
   digitalWrite(s2, HIGH);
   digitalWrite(s3, HIGH);
   delay(5);
-  return pulseIn(outPin, LOW);
+  return pulseIn(out, LOW);
 }
 
 int readRed() {
   digitalWrite(s2, LOW);
   digitalWrite(s3, LOW);
   delay(5);
-  return pulseIn(outPin, LOW);
+  return pulseIn(out, LOW);
 }
 
 void debugOutput() {
@@ -194,17 +192,6 @@ void loop() {
   duration = pulseIn(echoPin, HIGH);
   unsigned int distance = sonar.ping_cm();
   Serial.println(distance);
-
-  int stateLeft = digitalRead(IR_PIN_LEFT);
-  int stateRight = digitalRead(IR_PIN_RIGHT);
-
-  //
-
-  if (stateLeft == LOW && stateRight == HIGH) {
-    turnRight(1000, 255, 255);
-  } else if (stateRight == LOW && stateLeft == HIGH) {
-    turnLeft(1000, 255, 255);
-  driveForward(1000, 255, 255);
 
   //
   digitalWrite(s2, LOW);
@@ -256,9 +243,6 @@ int GetData() {
 
 void driveForward(int delayTime) {
 
-  analogWrite(leftMotorSpeedPin, leftSpeed);
-  analogWrite(rightMotorSpeedPin, rightSpeed);
-
   digitalWrite(leftMotorForwardPin, LOW);
   digitalWrite(leftMotorBackwardPin, HIGH);
   digitalWrite(rightMotorForwardPin, HIGH);
@@ -267,9 +251,6 @@ void driveForward(int delayTime) {
 }
 
 void driveBackward(int delayTime) {
-
-  analogWrite(leftMotorSpeedPin, leftSpeed);
-  analogWrite(rightMotorSpeedPin, rightSpeed);
 
   digitalWrite(leftMotorForwardPin, HIGH);
   digitalWrite(leftMotorBackwardPin, LOW);
@@ -281,9 +262,6 @@ void driveBackward(int delayTime) {
 // fix because idk?
 void turnLeft(int delayTime) {
 
-  analogWrite(leftMotorSpeedPin, leftSpeed);
-  analogWrite(rightMotorSpeedPin, rightSpeed);
-
   digitalWrite(leftMotorForwardPin, HIGH);
   digitalWrite(leftMotorBackwardPin, LOW);
   digitalWrite(rightMotorForwardPin, HIGH);
@@ -293,10 +271,6 @@ void turnLeft(int delayTime) {
 
 // fix because idk?
 void turnRight(int delayTime) {
-
-  analogWrite(leftMotorSpeedPin, leftSpeed);
-  analogWrite(rightMotorSpeedPin, rightSpeed);
-
   digitalWrite(leftMotorForwardPin, LOW);
   digitalWrite(leftMotorBackwardPin, HIGH);
   digitalWrite(rightMotorForwardPin, LOW);
@@ -310,28 +284,4 @@ void stopDriving(int delayTime) {
   digitalWrite(rightMotorForwardPin, LOW);
   digitalWrite(rightMotorBackwardPin, LOW);
   delay(delayTime);
-}
-
-void moveArmUp(int delayTime) {
-  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
-    // in steps of 1 degree
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(delayTime);                       // waits 15ms for the servo to reach the position
-  }
-  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(delayTime);                       // waits 15ms for the servo to reach the position
-  }
-}
-
-void moveArmDown(int delayTime) {
-  for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
-    // in steps of 1 degree
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(delayTime);                       // waits 15ms for the servo to reach the position
-  }
-  for (pos = 180; pos >= 0; pos -= 1) { // goes from 180 degrees to 0 degrees
-    myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    delay(delayTime);                       // waits 15ms for the servo to reach the position
-  }
 }
